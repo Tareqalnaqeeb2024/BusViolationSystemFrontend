@@ -1,15 +1,17 @@
-﻿import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
   Link,
   createRootRouteWithContext,
-  useNavigate,
+  useRouter,
   useRouterState,
+  useNavigate,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
+import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { ShieldAlert, Menu, Bell, User } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -19,6 +21,10 @@ import { getToken } from "@/api/apiClient";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
+
+
+
+
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -27,10 +33,7 @@ function NotFoundComponent() {
         <h2 className="mt-4 text-xl font-semibold">الصفحة غير موجودة</h2>
         <p className="mt-2 text-sm text-muted-foreground">الرابط الذي طلبته غير متاح.</p>
         <div className="mt-6">
-          <Link
-            to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-          >
+          <Link to="/" className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
             العودة للرئيسية
           </Link>
         </div>
@@ -40,31 +43,21 @@ function NotFoundComponent() {
 }
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
-  const router = useNavigate();
-
+  console.error(error);
+  const router = useRouter();
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
-
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold">حدث خطأ غير متوقع</h1>
         <p className="mt-2 text-sm text-muted-foreground">حاول مرة أخرى.</p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
-          <button
-            onClick={() => {
-              router.navigate({ to: "/" });
-              reset();
-            }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-          >
+          <button onClick={() => { router.invalidate(); reset(); }} className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
             إعادة المحاولة
           </button>
-          <a
-            href="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent"
-          >
+          <a href="/" className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent">
             الرئيسية
           </a>
         </div>
@@ -79,15 +72,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "لوحة التحكم — نظام إدارة المخالفات والحجز" },
-      {
-        name: "description",
-        content: "نظام احترافي لإدارة مخالفات المركبات والحجز والإفراج مع إحصائيات لحظية.",
-      },
+      { name: "description", content: "نظام احترافي لإدارة مخالفات المركبات والحجز والإفراج مع إحصائيات لحظية." },
       { property: "og:title", content: "نظام إدارة المخالفات والحجز" },
-      {
-        property: "og:description",
-        content: "لوحة تحكم لإدارة مخالفات المركبات وعمليات الحجز والإفراج.",
-      },
+      { property: "og:description", content: "لوحة تحكم لإدارة مخالفات المركبات وعمليات الحجز والإفراج." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -135,7 +122,6 @@ function BrandBlock() {
 
 function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-
   return (
     <nav className="flex-1 space-y-6 overflow-y-auto px-3 pb-4">
       {NAV_GROUPS.map((group) => {
@@ -150,17 +136,7 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
                 const active = n.to === "/" ? pathname === "/" : pathname === n.to || pathname.startsWith(n.to + "/");
                 const Icon = n.icon;
                 return (
-                  <Link
-                    key={n.to}
-                    to={n.to}
-                    onClick={onNavigate}
-                    className={cn(
-                      "flex items-center gap-3 rounded-md px-2.5 py-2 text-sm transition-colors",
-                      active
-                        ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                        : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
-                    )}
-                  >
+                  <Link key={n.to} to={n.to} onClick={onNavigate} className={cn("flex items-center gap-3 rounded-md px-2.5 py-2 text-sm transition-colors", active ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground")}>
                     <Icon className="h-4 w-4 shrink-0" />
                     <span className="truncate">{n.label}</span>
                   </Link>
@@ -198,8 +174,7 @@ function DesktopSidebar() {
 function TopBar() {
   const [open, setOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const current = NAV_ITEMS.find((n) => (n.to === "/" ? pathname === "/" : pathname === n.to || pathname.startsWith(n.to + "/")));
-
+  const current = NAV_ITEMS.find((n) => n.to === "/" ? pathname === "/" : pathname === n.to || pathname.startsWith(n.to + "/"));
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b bg-background/80 px-4 backdrop-blur md:px-6">
       <Sheet open={open} onOpenChange={setOpen}>
@@ -216,8 +191,8 @@ function TopBar() {
         </SheetContent>
       </Sheet>
       <div className="min-w-0 flex-1">
-        <div className="truncate text-sm font-semibold text-foreground">{current?.label ?? "لوحة التحكم"}</div>
-        <div className="hidden truncate text-[11px] text-muted-foreground sm:block">الإدارة العامة للمرور — نظام إدارة المخالفات والحجز</div>
+        <div className="truncate text-sm font-semibold text-foreground"> {current?.label ?? "لوحة التحكم"} </div>
+        <div className="hidden truncate text-[11px] text-muted-foreground sm:block"> الإدارة العامة للمرور — نظام إدارة المخالفات والحجز </div>
       </div>
       <button className="grid h-9 w-9 place-items-center rounded-md border bg-card text-foreground/70 hover:bg-muted" aria-label="الإشعارات">
         <Bell className="h-4 w-4" />
@@ -239,10 +214,7 @@ function RootComponent() {
 
     if (!isAuthenticated && !isLoginPage) {
       navigate({ to: "/login", replace: true });
-      return;
-    }
-
-    if (isAuthenticated && isLoginPage) {
+    } else if (isAuthenticated && isLoginPage) {
       navigate({ to: "/", replace: true });
     }
   }, [isAuthenticated, isLoginPage, navigate]);

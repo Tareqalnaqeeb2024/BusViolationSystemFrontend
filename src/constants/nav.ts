@@ -6,7 +6,6 @@ import {
   Car,
   Unlock,
   Archive,
-  BarChart3,
   Settings,
   type LucideIcon,
 } from "lucide-react";
@@ -28,7 +27,6 @@ export const NAV_ITEMS: NavItem[] = [
   { to: "/impounds/release", label: "الإفراج", icon: Unlock, group: "operations" },
   { to: "/impounds", label: "سجل الحجوزات", icon: Archive, group: "operations" },
 
-  { to: "/statistics", label: "الإحصائيات", icon: BarChart3, group: "system" },
   { to: "/settings", label: "الإعدادات", icon: Settings, group: "system" },
 ];
 

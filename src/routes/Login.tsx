@@ -65,14 +65,27 @@ export default function LoginPage() {
       if (res.ok) {
         const role = normalizeRole(data.role);
 
+        const displayName = data.fullName || data.username || userName;
+        const loginUsername = data.username || userName;
+
         setToken(data.token);
         setUserInfo({
-          fullName: data.fullName || data.username || userName,
-          userName: data.username || userName,
+          fullName: displayName,
+          userName: loginUsername,
           role,
         });
         localStorage.setItem("userRole", role);
-        localStorage.setItem("userName", data.fullName || data.username || userName);
+        localStorage.setItem("userName", displayName);
+        localStorage.setItem("username", loginUsername);
+        localStorage.setItem(
+          "loginSession",
+          JSON.stringify({
+            token: data.token,
+            username: loginUsername,
+            fullName: displayName,
+            role,
+          }),
+        );
 
         toast.success("تم تسجيل الدخول بنجاح");
 

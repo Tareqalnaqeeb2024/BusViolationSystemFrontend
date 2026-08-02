@@ -135,7 +135,7 @@ export type DashboardStatisticsResponse = {
   topViolatingVehicles: TopViolatingVehicleDto[];
 };
 
-export type StatisticsPeriod = "week" | "month" | "year";
+export type StatisticsPeriod = "day" | "week" | "month" | "year";
 
 // ==================== Service ====================
 

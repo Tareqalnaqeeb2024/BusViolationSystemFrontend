@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginRouteImport } from './routes/Login'
 import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as StatisticsRouteImport } from './routes/statistics'
 import { Route as ImpoundsIndexRouteImport } from './routes/impounds.index'
 import { Route as ImpoundsRegisterRouteImport } from './routes/impounds.register'
 import { Route as ImpoundsReleaseRouteImport } from './routes/impounds.release'
@@ -33,11 +32,6 @@ const LoginRoute = LoginRouteImport.update({
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const StatisticsRoute = StatisticsRouteImport.update({
-  id: '/statistics',
-  path: '/statistics',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ImpoundsIndexRoute = ImpoundsIndexRouteImport.update({
@@ -75,7 +69,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/Login': typeof LoginRoute
   '/settings': typeof SettingsRoute
-  '/statistics': typeof StatisticsRoute
   '/impounds/register': typeof ImpoundsRegisterRoute
   '/impounds/release': typeof ImpoundsReleaseRoute
   '/vehicles/search': typeof VehiclesSearchRoute
@@ -87,7 +80,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/Login': typeof LoginRoute
   '/settings': typeof SettingsRoute
-  '/statistics': typeof StatisticsRoute
   '/impounds/register': typeof ImpoundsRegisterRoute
   '/impounds/release': typeof ImpoundsReleaseRoute
   '/vehicles/search': typeof VehiclesSearchRoute
@@ -100,7 +92,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/Login': typeof LoginRoute
   '/settings': typeof SettingsRoute
-  '/statistics': typeof StatisticsRoute
   '/impounds/register': typeof ImpoundsRegisterRoute
   '/impounds/release': typeof ImpoundsReleaseRoute
   '/vehicles/search': typeof VehiclesSearchRoute
@@ -114,7 +105,6 @@ export interface FileRouteTypes {
     | '/'
     | '/Login'
     | '/settings'
-    | '/statistics'
     | '/impounds/register'
     | '/impounds/release'
     | '/vehicles/search'
@@ -126,7 +116,6 @@ export interface FileRouteTypes {
     | '/'
     | '/Login'
     | '/settings'
-    | '/statistics'
     | '/impounds/register'
     | '/impounds/release'
     | '/vehicles/search'
@@ -138,7 +127,6 @@ export interface FileRouteTypes {
     | '/'
     | '/Login'
     | '/settings'
-    | '/statistics'
     | '/impounds/register'
     | '/impounds/release'
     | '/vehicles/search'
@@ -151,7 +139,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
   SettingsRoute: typeof SettingsRoute
-  StatisticsRoute: typeof StatisticsRoute
   ImpoundsRegisterRoute: typeof ImpoundsRegisterRoute
   ImpoundsReleaseRoute: typeof ImpoundsReleaseRoute
   VehiclesSearchRoute: typeof VehiclesSearchRoute
@@ -181,13 +168,6 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/statistics': {
-      id: '/statistics'
-      path: '/statistics'
-      fullPath: '/statistics'
-      preLoaderRoute: typeof StatisticsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/impounds/': {
@@ -239,7 +219,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
   SettingsRoute: SettingsRoute,
-  StatisticsRoute: StatisticsRoute,
   ImpoundsRegisterRoute: ImpoundsRegisterRoute,
   ImpoundsReleaseRoute: ImpoundsReleaseRoute,
   VehiclesSearchRoute: VehiclesSearchRoute,

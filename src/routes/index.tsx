@@ -1,333 +1,318 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState, type ElementType } from "react";
-import { PageHeader } from "@/components/common/PageHeader";
-import { StatusBadge } from "@/components/common/StatusBadge";
-import { FileText, Car, Undo2, Lock, AlertTriangle, ShieldCheck } from "lucide-react";
-import { toast } from "sonner";
+import { useEffect, useState, type ReactNode } from "react";
 import {
-  dashboardService,
+  AlertTriangle,
+  CalendarRange,
+  Car,
+  Clock,
+  FileText,
+  ShieldCheck,
+  Sparkles,
+  TrendingUp,
+} from "lucide-react";
+import {
   PLATE_TYPE_LABELS,
   VIOLATION_TYPE_LABELS,
-  VEHICLE_TYPE_LABELS,
-  IMPOUND_REASON_LABELS,
-  IMPOUND_STATUS_LABELS,
-  EnImpoundStatus,
   type DashboardStatisticsResponse,
   type StatisticsPeriod,
 } from "@/api/dashboardService";
 
-export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "الإحصائيات" },
-      { name: "description", content: "إحصاءات مفصلة عن المخالفات والحجوزات." },
-    ],
-  }),
-  component: StatisticsPage,
-});
-
-// ==================== كارت إحصائية بلمسة لونية مميزة ====================
-
-function StatTile({
+function StatCard({
   label,
   value,
-  icon: Icon,
-  accent,
+  icon,
   loading,
+  accentClass,
+  iconClass,
 }: {
   label: string;
-  value: string | number;
-  icon: ElementType;
-  accent: string;
+  value: number;
+  icon: ReactNode;
   loading?: boolean;
+  accentClass: string;
+  iconClass: string;
 }) {
   return (
     <div
-      className="group relative overflow-hidden rounded-xl border bg-card p-5 transition-all hover:shadow-md"
-      style={{ borderInlineStart: `3px solid ${accent}` }}
+      className={`rounded-2xl border border-border/70 bg-linear-to-br ${accentClass} p-4 shadow-sm`}
     >
-      <div
-        className="flex h-10 w-10 items-center justify-center rounded-lg transition-transform group-hover:scale-105"
-        style={{ backgroundColor: `color-mix(in srgb, ${accent} 14%, transparent)`, color: accent }}
-      >
-        <Icon className="h-5 w-5" />
-      </div>
-
-      <div className="mt-4">
-        {loading ? (
-          <div className="h-8 w-16 animate-pulse rounded-md bg-muted" />
-        ) : (
-          <p className="text-2xl font-bold tabular-nums tracking-tight">{value}</p>
-        )}
-        <p className="mt-1 text-sm text-muted-foreground">{label}</p>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-medium text-muted-foreground">{label}</p>
+          <p className="mt-2 text-2xl font-bold tracking-tight ltr-nums">
+            {loading ? "..." : value.toLocaleString("ar-EG")}
+          </p>
+        </div>
+        <div
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-background/80 ${iconClass}`}
+        >
+          {icon}
+        </div>
       </div>
     </div>
   );
 }
 
-// ==================== دائرة أيقونة صغيرة للصفوف ====================
-
-function RowIcon({ icon: Icon, tone }: { icon: ElementType; tone: "warning" | "danger" | "success" }) {
-  const toneColor =
-    tone === "danger"
-      ? "var(--color-destructive, #ef4444)"
-      : tone === "success"
-        ? "var(--color-chart-2, #16a34a)"
-        : "var(--color-chart-1, #d97706)";
-  return (
-    <div
-      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
-      style={{ backgroundColor: `color-mix(in srgb, ${toneColor} 15%, transparent)`, color: toneColor }}
-    >
-      <Icon className="h-4 w-4" />
-    </div>
-  );
-}
-
-function EmptyRow({ message }: { message: string }) {
-  return <p className="py-6 text-center text-sm text-muted-foreground">{message}</p>;
-}
-
-function RowSkeleton() {
-  return (
-    <div className="flex items-center gap-3 py-3">
-      <div className="h-9 w-9 shrink-0 animate-pulse rounded-full bg-muted" />
-      <div className="flex-1 space-y-2">
-        <div className="h-3.5 w-32 animate-pulse rounded bg-muted" />
-        <div className="h-3 w-24 animate-pulse rounded bg-muted" />
-      </div>
-    </div>
-  );
-}
-
-function StatisticsPage() {
+function DashboardHome() {
   const [period, setPeriod] = useState<StatisticsPeriod>("month");
-  const [data, setData] = useState<DashboardStatisticsResponse | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<DashboardStatisticsResponse | null>(null);
+
+  const recentViolations = stats?.recentViolations ?? [];
+  const recentImpounds = stats?.recentImpounds ?? [];
+  const topViolatingVehicles = stats?.topViolatingVehicles ?? [];
+
+  const periods: StatisticsPeriod[] = ["day", "week", "month", "year"];
+
+  const getViolationLabel = (value: number) => VIOLATION_TYPE_LABELS[value] ?? `غير معروف (${value})`;
+  const getPlateTypeLabel = (value: number) => PLATE_TYPE_LABELS[value] ?? `غير معروف (${value})`;
 
   useEffect(() => {
-    let cancelled = false;
-    const fetchStats = async () => {
+    async function fetchStats() {
       setLoading(true);
-      setError(null);
       try {
-        const res = await dashboardService.statistics(period);
-        if (!cancelled) setData(res);
-      } catch (err: any) {
-        if (!cancelled) {
-          console.error(err);
-          setError(err?.message || "تعذر تحميل الإحصائيات");
-          toast.error(err?.message || "تعذر تحميل الإحصائيات");
+        const res = await fetch(`http://localhost:5206/api/dashboard/statistics?period=${period}`);
+        if (res.ok) {
+          const data = await res.json();
+          setStats(data);
         }
+      } catch (err) {
+        console.error("Failed to load dashboard statistics", err);
       } finally {
-        if (!cancelled) setLoading(false);
+        setLoading(false);
       }
-    };
+    }
     fetchStats();
-    return () => {
-      cancelled = true;
-    };
   }, [period]);
 
   return (
-    <div className="mx-auto max-w-7xl">
-      <PageHeader
-        title="الإحصائيات"
-        description="نظرة تحليلية على الأداء العام."
-        actions={
-          <div className="flex gap-1.5 rounded-lg bg-muted p-1">
-            {(["week", "month", "year"] as StatisticsPeriod[]).map((p) => (
-              <button
-                key={p}
-                onClick={() => setPeriod(p)}
-                className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
-                  period === p
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {p === "week" ? "أسبوع" : p === "month" ? "شهر" : "سنة"}
-              </button>
-            ))}
+    <div className="space-y-6">
+      <div className="overflow-hidden rounded-3xl border border-border/70 bg-linear-to-br from-primary/10 via-background to-background p-5 shadow-sm">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-2xl">
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-background/70 px-3 py-1 text-[11px] font-semibold text-primary">
+              <Sparkles className="h-3.5 w-3.5" />
+              نظرة عامة سريعة
+            </div>
+            <h2 className="text-2xl font-bold tracking-tight">لوحة التحكم</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              تابع أداء النظام، أحدث المخالفات والحجوزات، وأكثر المركبات مخالفة من مكان واحد.
+            </p>
           </div>
-        }
-      />
 
-      {error && (
-        <div className="mb-4 flex items-center gap-2 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
-          <AlertTriangle className="h-4 w-4 shrink-0" />
-          {error}
+          <div className="rounded-2xl border border-border/70 bg-background/70 p-3 backdrop-blur">
+            <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+              <CalendarRange className="h-4 w-4" />
+              الفترة الزمنية
+            </div>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {periods.map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setPeriod(p)}
+                  className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
+                    period === p
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  }`}
+                >
+                  {p === "day"
+                    ? "اليوم"
+                    : p === "week"
+                      ? "أسبوع"
+                      : p === "month"
+                        ? "الشهر"
+                        : "السنة"}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
-      )}
+      </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <StatTile
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard
           label="إجمالي المخالفات"
-          value={(data?.totalViolations ?? 0).toLocaleString("ar-EG")}
-          icon={FileText}
-          accent="var(--color-chart-1, #d97706)"
+          value={stats?.totalViolations ?? 0}
           loading={loading}
+          accentClass="from-blue-500/10 via-blue-500/5 to-background"
+          iconClass="text-blue-600"
+          icon={<FileText className="h-5 w-5" />}
         />
-        <StatTile
+        <StatCard
           label="إجمالي الحجوزات"
-          value={(data?.totalImpounds ?? 0).toLocaleString("ar-EG")}
-          icon={Lock}
-          accent="var(--color-chart-3, #7c3aed)"
+          value={stats?.totalImpounds ?? 0}
           loading={loading}
+          accentClass="from-amber-500/10 via-amber-500/5 to-background"
+          iconClass="text-amber-600"
+          icon={<AlertTriangle className="h-5 w-5" />}
         />
-        <StatTile
+        <StatCard
           label="إجمالي الإفراجات"
-          value={(data?.totalReleases ?? 0).toLocaleString("ar-EG")}
-          icon={Undo2}
-          accent="var(--color-chart-2, #16a34a)"
+          value={stats?.totalReleases ?? 0}
           loading={loading}
+          accentClass="from-emerald-500/10 via-emerald-500/5 to-background"
+          iconClass="text-emerald-600"
+          icon={<TrendingUp className="h-5 w-5" />}
         />
-        <StatTile
-          label="حجوزات فعالة"
-          value={(data?.activeImpoundsCount ?? 0).toLocaleString("ar-EG")}
-          icon={Car}
-          accent="var(--color-chart-4, #dc2626)"
+        <StatCard
+          label="الحجوزات النشطة"
+          value={stats?.activeImpoundsCount ?? 0}
           loading={loading}
+          accentClass="from-rose-500/10 via-rose-500/5 to-background"
+          iconClass="text-rose-600"
+          icon={<Car className="h-5 w-5" />}
         />
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {/* أحدث المخالفات */}
-        <div className="rounded-xl border bg-card p-5">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold">أحدث المخالفات</h3>
-            {!loading && (
-              <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                {data?.recentViolations?.length ?? 0}
-              </span>
-            )}
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+        <div className="rounded-3xl border border-border/70 bg-card p-4 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="flex items-center gap-2 text-sm font-bold">
+              <FileText className="h-4 w-4 text-primary" />
+              آخر 10 مخالفات مسجلة
+            </h3>
+            <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-semibold text-primary">
+              محدث
+            </span>
           </div>
-          <div className="mt-2 divide-y">
-            {loading && (
-              <>
-                <RowSkeleton />
-                <RowSkeleton />
-                <RowSkeleton />
-              </>
-            )}
-            {!loading && (data?.recentViolations?.length ?? 0) === 0 && (
-              <EmptyRow message="لا توجد مخالفات حديثة." />
-            )}
-            {!loading &&
-              data?.recentViolations?.map((v) => (
-                <div key={v.id} className="flex items-center gap-3 py-3 text-sm">
-                  <RowIcon icon={AlertTriangle} tone="warning" />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium ltr-nums">
-                      {v.plateNumber}-{v.governorateNumber}
-                      <span className="mr-2 font-normal text-muted-foreground">
-                        {PLATE_TYPE_LABELS[v.plateType] ?? "—"}
-                      </span>
+          <div className="space-y-2.5">
+            {loading ? (
+              <div className="rounded-xl border border-dashed border-border/70 p-4 text-center text-xs text-muted-foreground">
+                جاري التحميل...
+              </div>
+            ) : recentViolations.length > 0 ? (
+              recentViolations.map((v) => (
+                <div
+                  key={v.id}
+                  className="flex flex-col gap-2 rounded-2xl border border-border/60 bg-muted/20 p-3 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div>
+                    <p className="font-bold ltr-nums">
+                      لوحة #{v.plateNumber}-{v.governorateNumber}
                     </p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {VIOLATION_TYPE_LABELS[v.violationType] ?? "—"}
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      نوع المخالفة: {getViolationLabel(v.violationType)}
                     </p>
                   </div>
-                  <span className="shrink-0 text-xs text-muted-foreground ltr-nums">
+                  <span className="text-xs text-muted-foreground ltr-nums">
                     {new Date(v.violationDate).toLocaleDateString("ar-EG")}
                   </span>
                 </div>
-              ))}
+              ))
+            ) : (
+              <div className="rounded-xl border border-dashed border-border/70 p-4 text-center text-xs text-muted-foreground">
+                لا توجد مخالفات مسجلة حديثاً.
+              </div>
+            )}
           </div>
         </div>
 
-        {/* المركبات الأكثر مخالفة */}
-        <div className="rounded-xl border bg-card p-5">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold">المركبات الأكثر مخالفة</h3>
-            {!loading && (
-              <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                {data?.topViolatingVehicles?.length ?? 0}
-              </span>
-            )}
+        <div className="rounded-3xl border border-border/70 bg-card p-4 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="flex items-center gap-2 text-sm font-bold">
+              <Clock className="h-4 w-4 text-amber-500" />
+              أحدث الحجوزات المرورية
+            </h3>
+            <span className="rounded-full bg-amber-500/10 px-2.5 py-1 text-[10px] font-semibold text-amber-600">
+              نشط
+            </span>
           </div>
-          <div className="mt-2 divide-y">
-            {loading && (
-              <>
-                <RowSkeleton />
-                <RowSkeleton />
-                <RowSkeleton />
-              </>
-            )}
-            {!loading && (data?.topViolatingVehicles?.length ?? 0) === 0 && (
-              <EmptyRow message="لا توجد بيانات كافية." />
-            )}
-            {!loading &&
-              data?.topViolatingVehicles?.map((v, i) => (
-                <div key={v.vehicleId} className="flex items-center gap-3 py-3 text-sm">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">
-                    {i + 1}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium ltr-nums">
-                      {v.plateNumber}-{v.governorateNumber}
+          <div className="space-y-2.5">
+            {loading ? (
+              <div className="rounded-xl border border-dashed border-border/70 p-4 text-center text-xs text-muted-foreground">
+                جاري التحميل...
+              </div>
+            ) : recentImpounds.length > 0 ? (
+              recentImpounds.map((i) => (
+                <div
+                  key={i.id}
+                  className="flex flex-col gap-2 rounded-2xl border border-border/60 bg-muted/20 p-3 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div>
+                    <p className="font-bold ltr-nums">
+                      لوحة #{i.plateNumber}-{i.governorateNumber}
                     </p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {VEHICLE_TYPE_LABELS[v.vehicleType] ?? "—"} · {PLATE_TYPE_LABELS[v.plateType] ?? "—"}
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      السائق: {i.driverName || "غير محدد"}
                     </p>
                   </div>
-                  <span className="shrink-0 rounded-full bg-muted px-2.5 py-1 text-xs font-semibold ltr-nums">
-                    {v.violationsCount}
+                  <span
+                    className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${
+                      i.releaseDate
+                        ? "bg-emerald-500/10 text-emerald-600"
+                        : "bg-rose-500/10 text-rose-600"
+                    }`}
+                  >
+                    {i.releaseDate ? "مفرج عنها" : "محجوزة"}
                   </span>
                 </div>
-              ))}
+              ))
+            ) : (
+              <div className="rounded-xl border border-dashed border-border/70 p-4 text-center text-xs text-muted-foreground">
+                لا توجد حجوزات نشطة حديثاً.
+              </div>
+            )}
           </div>
         </div>
+      </div>
 
-        {/* أحدث الحجوزات */}
-        <div className="rounded-xl border bg-card p-5 lg:col-span-2">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold">أحدث الحجوزات</h3>
-            {!loading && (
-              <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                {data?.recentImpounds?.length ?? 0}
-              </span>
-            )}
-          </div>
-          <div className="mt-2 divide-y">
-            {loading && (
-              <>
-                <RowSkeleton />
-                <RowSkeleton />
-              </>
-            )}
-            {!loading && (data?.recentImpounds?.length ?? 0) === 0 && (
-              <EmptyRow message="لا توجد حجوزات حديثة." />
-            )}
-            {!loading &&
-              data?.recentImpounds?.map((imp) => {
-                const status = IMPOUND_STATUS_LABELS[imp.status] ?? { label: "—", tone: "warning" as const };
-                const isReleased = imp.status === EnImpoundStatus.Released;
-                return (
-                  <div key={imp.id} className="flex items-center gap-3 py-3 text-sm">
-                    <RowIcon icon={isReleased ? ShieldCheck : Lock} tone={isReleased ? "success" : "warning"} />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-medium ltr-nums">
-                        {imp.plateNumber}-{imp.governorateNumber}
-                      </p>
-                      <p className="truncate text-xs text-muted-foreground">
-                        {IMPOUND_REASON_LABELS[imp.impoundReason] ?? "—"}
-                        {imp.driverName ? ` · ${imp.driverName}` : ""}
-                      </p>
-                    </div>
-                    <div className="flex shrink-0 flex-col items-end gap-1">
-                      <StatusBadge tone={status.tone}>{status.label}</StatusBadge>
-                      <span className="text-xs text-muted-foreground ltr-nums">
-                        {new Date(imp.impoundDate).toLocaleDateString("ar-EG")}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-          </div>
+      <div className="rounded-3xl border border-border/70 bg-card p-4 shadow-sm">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="flex items-center gap-2 text-sm font-bold">
+            <ShieldCheck className="h-4 w-4 text-rose-500" />
+            أكثر 10 باصات/مركبات مخالفة
+          </h3>
+          <span className="rounded-full bg-rose-500/10 px-2.5 py-1 text-[10px] font-semibold text-rose-600">
+            أعلى التكرار
+          </span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-140 text-right text-xs">
+            <thead>
+              <tr className="border-b border-border/70 bg-muted/40 text-muted-foreground">
+                <th className="p-3 text-right">رقم اللوحة</th>
+                <th className="p-3 text-right">المحافظة</th>
+                <th className="p-3 text-right">نوع اللوحة</th>
+                <th className="p-3 text-right">عدد المخالفات التراكمي</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/70">
+              {loading ? (
+                <tr>
+                  <td colSpan={4} className="p-4 text-center text-muted-foreground">
+                    جاري التحميل...
+                  </td>
+                </tr>
+              ) : topViolatingVehicles.length > 0 ? (
+                topViolatingVehicles.map((tv) => (
+                  <tr
+                    key={tv.vehicleId}
+                    className="bg-background/40 transition-colors hover:bg-muted/20"
+                  >
+                    <td className="p-3 font-bold ltr-nums">{tv.plateNumber}</td>
+                    <td className="p-3 ltr-nums">{tv.governorateNumber}</td>
+                    <td className="p-3">{getPlateTypeLabel(tv.plateType)}</td>
+                    <td className="p-3 font-bold text-rose-600 ltr-nums">
+                      {tv.violationsCount} مخالفات
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={4} className="p-4 text-center text-muted-foreground">
+                    لا توجد بيانات متاحة.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
   );
 }
+
+export const Route = createFileRoute("/")({
+  component: DashboardHome,
+});
