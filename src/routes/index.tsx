@@ -71,7 +71,7 @@ function DashboardHome() {
     async function fetchStats() {
       setLoading(true);
       try {
-        const res = await fetch(`http://localhost:5206/api/dashboard/statistics?period=${period}`);
+        const res = await fetch(`https://busviolationsystembackend-production.up.railway.app/api/dashboard/statistics?period=${period}`);
         if (res.ok) {
           const data = await res.json();
           setStats(data);

@@ -107,16 +107,18 @@ function AddViolationPage() {
     plateRef.current?.focus();
   }, []);
 
-  const onSubmit = async (data: Data) => {
+const onSubmit = async (data: Data) => {
     try {
+      const formattedDate = `${data.date}T${data.time}:00Z`;
       const payload = {
         PlateNumber: Number(data.plateNumber),
         GovernorateNumber: Number(data.plateSuffix) || 1,
         PlateType: PLATE_TYPE_VALUES[data.plateType] ?? 2,
         VehicleType: VEHICLE_TYPE_VALUES[data.vehicleType] ?? 1,
         ViolationType: VIOLATION_TYPE_VALUES[data.violationType] ?? 1,
-        ViolationDate: `${data.date}T${data.time}:00`,
+        ViolationDate: formattedDate,
         Notes: data.notes?.trim() ? data.notes.trim() : undefined,
+        UserId: 1, // <--- أضف هذه السطر هنا لتحديد مستخدم افتراضي
       };
 
       await violationService.register(payload);

@@ -61,7 +61,7 @@ import axios, { type AxiosInstance, type AxiosRequestConfig } from "axios";
 
 const BASE_URL =
   (typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_API_BASE_URL) ||
-  "http://localhost:5206/api";
+  "https://busviolationsystembackend-production.up.railway.app/api/";
 
 const TOKEN_KEY = "auth_token";
 const USER_KEY = "user_info";
