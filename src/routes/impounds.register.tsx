@@ -42,11 +42,11 @@ function RegisterImpoundPage() {
   const [formData, setFormData] = useState({
     plateNumber: "",
     governorateNumber: "1",
-    plateType: "1", 
-    vehicleType: "", // تم تعديل الاسم ليتطابق مع الـ DTO
+    plateType: "2",
+    vehicleType: "1", // باص
     violationId: "",
     driverName: "",
-    impoundReason: "", // القيمة الابتدائية فارغة لإجبار المستخدم على الاختيار
+    impoundReason: "2", // تشكيل فرزة
     notes: "",
   });
 
