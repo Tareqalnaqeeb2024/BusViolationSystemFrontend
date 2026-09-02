@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Unlock } from "lucide-react";
+import { Loader2, Unlock } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -190,6 +190,7 @@ function ReleasePage() {
 
         <div className="flex gap-2 justify-end">
           <Button onClick={search} disabled={searching}>
+            {searching ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
             {searching ? 'جاري البحث...' : 'بحث بالمركبة'}
           </Button>
         </div>
@@ -244,7 +245,8 @@ function ReleasePage() {
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="outline" onClick={() => { setFoundVehicle(null); setFoundImpound(null); }}>إلغاء</Button>
               <Button onClick={(e) => doRelease(e)} disabled={submitting}>
-                {submitting ? 'جارٍ التنفيذ...' : <><Unlock className="h-4 w-4 ml-1" /> تأكيد الإفراج</>}
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Unlock className="h-4 w-4 ml-1" />}
+                {submitting ? 'جارٍ التنفيذ...' : 'تأكيد الإفراج'}
               </Button>
             </div>
           </div>

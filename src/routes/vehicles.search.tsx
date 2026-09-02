@@ -1,6 +1,7 @@
 ﻿import { createFileRoute } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { PageHeader } from "@/components/common/PageHeader";
+import { Loading } from "@/components/common/Loading";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -337,9 +338,7 @@ function SearchVehiclePage() {
 
       <div className="mt-6">
         {loading ? (
-          <div className="rounded-xl border bg-card p-12 text-center text-sm text-muted-foreground">
-            جاري جلب بيانات المركبة من الخادم...
-          </div>
+          <Loading label="جارٍ جلب بيانات المركبة من الخادم..." className="rounded-xl border bg-card p-12" />
         ) : searchResult ? (
           <div className="flex flex-col gap-6">
             <div

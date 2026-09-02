@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { Loader2 } from "lucide-react";
 import { PageHeader } from "@/components/common/PageHeader";
+import { Loading } from "@/components/common/Loading";
 import { SearchBox } from "@/components/common/SearchBox";
 import { DataTable, type Column } from "@/components/tables/DataTable";
 import { Button } from "@/components/ui/button";
@@ -219,6 +221,7 @@ function ImpoundsPage() {
   const [totalCount, setTotalCount] = useState(0);
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [releaseSubmitting, setReleaseSubmitting] = useState(false);
   const [selectedImpound, setSelectedImpound] = useState<ImpoundItem | null>(null);
   const [fineAmount, setFineAmount] = useState<number | "">("");
   const [receiptNumber, setReceiptNumber] = useState<number | "">("");
@@ -237,6 +240,7 @@ function ImpoundsPage() {
   const submitRelease = async (e?: FormEvent) => {
     e?.preventDefault();
     if (!selectedImpound) return;
+    setReleaseSubmitting(true);
     try {
       const currentUserDisplayName = getLoggedInUserDisplayName();
       const payload = {
@@ -274,6 +278,8 @@ function ImpoundsPage() {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "فشل عملية الإفراج";
       toast.error(message);
+    } finally {
+      setReleaseSubmitting(false);
     }
   };
 
@@ -455,7 +461,7 @@ function ImpoundsPage() {
       ) : null}
 
       {loading ? (
-        <div className="p-12 text-center text-sm text-muted-foreground">تحميل سجلات الحجز...</div>
+        <Loading label="جارٍ تحميل سجلات الحجز..." className="rounded-xl border bg-card p-12" />
       ) : rows.length === 0 ? (
         <div className="rounded-xl border bg-card p-12 text-center text-sm text-muted-foreground">
           لا توجد سجلات مطابقة للبحث.
@@ -589,7 +595,10 @@ function ImpoundsPage() {
                 <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                   إلغاء
                 </Button>
-                <Button type="submit">تأكيد الإفراج</Button>
+                <Button type="submit" disabled={releaseSubmitting}>
+                  {releaseSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  {releaseSubmitting ? "جارٍ التنفيذ..." : "تأكيد الإفراج"}
+                </Button>
               </div>
             </DialogFooter>
           </form>

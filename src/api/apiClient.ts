@@ -61,7 +61,8 @@ import axios, { type AxiosInstance, type AxiosRequestConfig } from "axios";
 
 const BASE_URL =
   (typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_API_BASE_URL) ||
-  "https://busviolationsystembackend-production.up.railway.app/api/";
+  // "https://busviolationsystembackend-production.up.railway.app/api/";
+  "https://busviolationsystembackend.onrender.com/api/";
 
 const TOKEN_KEY = "auth_token";
 const USER_KEY = "user_info";
@@ -102,7 +103,7 @@ export function logout() {
 
 export const apiClient: AxiosInstance = axios.create({
   baseURL: BASE_URL,
-  timeout: 20_000,
+  timeout: 60_000,
   headers: { "Content-Type": "application/json", Accept: "application/json" },
 });
 

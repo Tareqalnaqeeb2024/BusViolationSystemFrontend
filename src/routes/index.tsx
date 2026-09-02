@@ -6,6 +6,7 @@ import {
   Car,
   Clock,
   FileText,
+  Loader2,
   ShieldCheck,
   Sparkles,
   TrendingUp,
@@ -16,6 +17,8 @@ import {
   type DashboardStatisticsResponse,
   type StatisticsPeriod,
 } from "@/api/dashboardService";
+import { dashboardService } from "@/api/dashboardService";
+import { Loading } from "@/components/common/Loading";
 
 function StatCard({
   label,
@@ -40,7 +43,7 @@ function StatCard({
         <div className="min-w-0">
           <p className="text-xs font-medium text-muted-foreground">{label}</p>
           <p className="mt-2 text-2xl font-bold tracking-tight ltr-nums">
-            {loading ? "..." : value.toLocaleString("ar-EG")}
+            {loading ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /> : value.toLocaleString("ar-EG")}
           </p>
         </div>
         <div
@@ -71,11 +74,8 @@ function DashboardHome() {
     async function fetchStats() {
       setLoading(true);
       try {
-        const res = await fetch(`https://busviolationsystembackend-production.up.railway.app/api/dashboard/statistics?period=${period}`);
-        if (res.ok) {
-          const data = await res.json();
-          setStats(data);
-        }
+        const data = await dashboardService.statistics(period);
+        setStats(data);
       } catch (err) {
         console.error("Failed to load dashboard statistics", err);
       } finally {
@@ -178,9 +178,7 @@ function DashboardHome() {
           </div>
           <div className="space-y-2.5">
             {loading ? (
-              <div className="rounded-xl border border-dashed border-border/70 p-4 text-center text-xs text-muted-foreground">
-                جاري التحميل...
-              </div>
+              <Loading label="جارٍ تحميل المخالفات..." className="py-4 text-xs" />
             ) : recentViolations.length > 0 ? (
               recentViolations.map((v) => (
                 <div
@@ -220,9 +218,7 @@ function DashboardHome() {
           </div>
           <div className="space-y-2.5">
             {loading ? (
-              <div className="rounded-xl border border-dashed border-border/70 p-4 text-center text-xs text-muted-foreground">
-                جاري التحميل...
-              </div>
+              <Loading label="جارٍ تحميل الحجوزات..." className="py-4 text-xs" />
             ) : recentImpounds.length > 0 ? (
               recentImpounds.map((i) => (
                 <div
@@ -281,7 +277,7 @@ function DashboardHome() {
               {loading ? (
                 <tr>
                   <td colSpan={4} className="p-4 text-center text-muted-foreground">
-                    جاري التحميل...
+                    <Loading label="جارٍ تحميل البيانات..." className="py-4 text-xs" />
                   </td>
                 </tr>
               ) : topViolatingVehicles.length > 0 ? (

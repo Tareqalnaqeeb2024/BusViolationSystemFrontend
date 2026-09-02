@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Car } from "lucide-react";
+import { Car, Loader2 } from "lucide-react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,6 +39,7 @@ const IMPOUND_REASONS = [
 ];
 
 function RegisterImpoundPage() {
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     plateNumber: "",
     governorateNumber: "1",
@@ -77,6 +78,7 @@ function RegisterImpoundPage() {
     }
 
     try {
+      setSubmitting(true);
       // إرسال الطلب إلى الباك إند
       await impoundService.register(payload);
       toast.success("تم تسجيل الحجز بنجاح");
@@ -93,6 +95,8 @@ function RegisterImpoundPage() {
       }));
     } catch (error: any) {
       toast.error(error?.message || "حدث خطأ أثناء الإرسال");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -192,8 +196,9 @@ function RegisterImpoundPage() {
           />
         </div>
 
-        <Button type="submit" className="gap-2 w-full md:w-auto">
-          <Car className="h-4 w-4" /> تسجيل الحجز
+        <Button type="submit" disabled={submitting} className="gap-2 w-full md:w-auto">
+          {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Car className="h-4 w-4" />}
+          {submitting ? "جارٍ تسجيل الحجز..." : "تسجيل الحجز"}
         </Button>
       </form>
     </div>

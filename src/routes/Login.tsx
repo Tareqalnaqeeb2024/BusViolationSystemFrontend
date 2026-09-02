@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ShieldAlert, Lock, User, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { getToken, setToken, setUserInfo } from "@/api/apiClient";
+import { apiClient, getToken, setToken, setUserInfo } from "@/api/apiClient";
 
 const ADMIN_ROLES = ["admin", "1"];
 const OFFICER_ROLES = ["officer", "2", "traffic", "police"];
@@ -55,14 +55,10 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      const res = await fetch("https://busviolationsystembackend-production.up.railway.app/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: userName, password }),
-      });
-      const data = await res.json();
+      const res = await apiClient.post("auth/login", { username: userName, password });
+      const data = res.data;
 
-      if (res.ok) {
+      if (data) {
         const role = normalizeRole(data.role);
 
         const displayName = data.fullName || data.username || userName;

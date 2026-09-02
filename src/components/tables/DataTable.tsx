@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/common/EmptyState";
+import { Loading } from "@/components/common/Loading";
 
 export type Column<T> = {
   key: string;
@@ -15,9 +16,13 @@ type Props<T> = {
   rowKey: (row: T) => string;
   empty?: ReactNode;
   mobileCard?: (row: T) => ReactNode;
+  loading?: boolean;
 };
 
-export function DataTable<T>({ columns, rows, rowKey, empty, mobileCard }: Props<T>) {
+export function DataTable<T>({ columns, rows, rowKey, empty, mobileCard, loading = false }: Props<T>) {
+  if (loading) {
+    return <Loading label="جارٍ تحميل السجلات..." />;
+  }
   if (!rows.length) {
     return <>{empty ?? <EmptyState />}</>;
   }

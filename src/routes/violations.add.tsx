@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Save } from "lucide-react";
+import { Loader2, Save } from "lucide-react";
 import { violationService } from "@/api/violationService";
 
 export const Route = createFileRoute("/violations/add")({
@@ -214,7 +214,8 @@ function AddViolationPage() {
 
           <div className="flex flex-wrap gap-2 pt-2">
             <Button type="submit" disabled={isSubmitting} className="gap-2">
-              <Save className="h-4 w-4" /> حفظ المخالفة
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              {isSubmitting ? "جارٍ حفظ المخالفة..." : "حفظ المخالفة"}
             </Button>
           </div>
         </form>
